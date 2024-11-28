@@ -17,29 +17,41 @@ jobs:
       run: |
         Invoke-WebRequest -Uri "https://pkgs.tailscale.com/stable/tailscale-setup-latest.exe" -OutFile "tailscale-setup-latest.exe"
         Start-Process -FilePath "tailscale-setup-latest.exe" -ArgumentList "/silent" -Wait
+        Write-Host "Tailscale installed successfully."
 
     - name: Verify Tailscale installation
       run: |
         & "C:\Program Files\Tailscale\tailscale.exe" version
+        Write-Host "Tailscale version checked."
 
     - name: Add Tailscale AuthKey
       run: |
         $authKey = "${{ secrets.TAILSCALE_AUTHKEY }}"  # Menggunakan Tailscale AuthKey dari GitHub Secrets
         Write-Host "Using Tailscale AuthKey: $authKey"
         & "C:\Program Files\Tailscale\tailscale.exe" up --authkey=$authKey
-        Start-Sleep -Seconds 5  # Tunggu beberapa detik agar koneksi berhasil
+        Write-Host "Tailscale auth key added successfully."
+        Start-Sleep -Seconds 10  # Tunggu beberapa detik agar koneksi berhasil
 
     - name: Set RDP Username and Password
       run: |
         $username = "Administrator"
         $password = "HenCoders2024"
         Write-Host "RDP username: $username, Password: $password"
-      
+
     - name: Get Tailscale IP address
       run: |
-        $tailscaleIP = & "C:\Program Files\Tailscale\tailscale.exe" status | Select-String -Pattern "Tailscale IP:" | ForEach-Object { $_.Line.Trim() }
+        $tailscaleIP = & "C:\Program Files\Tailscale\tailscale.exe" ip -4
         Write-Host "Tailscale IP Address: $tailscaleIP"
 
     - name: Start RDP session
       run: |
         Write-Host "Access RDP using the Tailscale IP and login with username '$username' and password '$password'"
+        Start-Sleep -Seconds 5  # Menambahkan delay agar sesi RDP dapat berjalan dengan lancar
+
+    - name: Keep printing status for 6 hours
+      run: |
+        $endTime = (Get-Date).AddHours(6)
+        while ((Get-Date) -lt $endTime) {
+          Write-Host "HenRdp Aktif"
+          Start-Sleep -Seconds 60  # Menunggu 1 menit sebelum menampilkan pesan lagi
+        }
