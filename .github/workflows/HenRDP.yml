@@ -24,7 +24,7 @@ jobs:
 
     - name: Add Tailscale AuthKey
       run: |
-        $authKey = "tskey-auth-kYBBkupZRq11CNTRL-XWEekp4UpBb3n93gfkofCbS1Ea8TqSssH"  # Ganti dengan authkey Tailscale yang valid
+        $authKey = "tskey-auth-krRappnhLe11CNTRL-mN6PU44sdbTqNF9BCLqTcTYKuNkBmWCZ"  # Ganti dengan authkey Tailscale yang valid
         & "C:\Program Files\Tailscale\tailscale.exe" up --authkey=$authKey
         Start-Sleep -Seconds 5  # Tunggu beberapa detik agar koneksi berhasil
 
