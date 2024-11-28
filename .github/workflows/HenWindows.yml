@@ -24,9 +24,9 @@ jobs:
     - name: Verify Tailscale installation with full path
       run: |
         & "C:\Program Files\Tailscale\tailscale.exe" version || echo "Tailscale is not installed"
-    - name: Authenticate Tailscale with full path and TCP
+    - name: Authenticate Tailscale with full path
       run: |
-        & "C:\Program Files\Tailscale\tailscale.exe" up --authkey $Env:TAILSCALE_AUTHKEY --use-tcp
+        & "C:\Program Files\Tailscale\tailscale.exe" up --authkey $Env:TAILSCALE_AUTHKEY
       env:
         TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
     - name: Enable access to RDP
