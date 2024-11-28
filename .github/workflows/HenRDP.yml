@@ -38,6 +38,15 @@ jobs:
         $password = "HenCoders2024"
         Write-Host "RDP username: $username, Password: $password"
 
+    - name: Enable RDP and Open Port 3389
+      run: |
+        # Aktifkan Remote Desktop
+        $regKey = "HKLM:\System\CurrentControlSet\Control\Terminal Server"
+        Set-ItemProperty -Path $regKey -Name "fDenyTSConnections" -Value 0
+        # Membuka port RDP (3389) di Windows Firewall
+        New-NetFirewallRule -Name "Allow RDP" -DisplayName "Allow RDP" -Enabled True -Protocol TCP -Action Allow -LocalPort 3389
+        Write-Host "RDP enabled and port 3389 opened in Windows Firewall."
+
     - name: Get Tailscale IP address
       run: |
         $tailscaleIP = & "C:\Program Files\Tailscale\tailscale.exe" ip -4
@@ -52,6 +61,6 @@ jobs:
       run: |
         $endTime = (Get-Date).AddHours(6)
         while ((Get-Date) -lt $endTime) {
-          Write-Host "HenRdp Aktif"
+          Write-Host "HenRdp Aktif setiap menit"
           Start-Sleep -Seconds 60  # Menunggu 1 menit sebelum menampilkan pesan lagi
         }
