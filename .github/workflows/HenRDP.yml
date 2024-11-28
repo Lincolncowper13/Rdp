@@ -1,4 +1,4 @@
-name: Windows RDP
+name: Windows RDP with Tailscale
 
 on:
   push:
@@ -7,32 +7,51 @@ on:
   workflow_dispatch:
 
 jobs:
-  setup-tailscale:
+  setup:
     runs-on: windows-latest
 
     steps:
-      - name: Download and install Tailscale
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Tailscale
         run: |
-          Invoke-WebRequest -Uri "https://pkgs.tailscale.com/stable/tailscale-setup-latest.exe" -OutFile "$env:TEMP\tailscale-setup-latest.exe"
-          Start-Process -FilePath "$env:TEMP\tailscale-setup-latest.exe" -ArgumentList "/quiet" -Wait
+          Invoke-WebRequest -Uri https://pkgs.tailscale.com/stable/tailscale-setup-latest.exe -OutFile 'tailscale-setup-latest.exe'
+          Start-Process -FilePath 'tailscale-setup-latest.exe' -ArgumentList '/silent' -Wait
           
+      - name: Verify Tailscale installation
+        run: |
+          where tailscale
+          tailscale version
+
       - name: Start Tailscale service and login using authkey
         run: |
           $authKey = "${{ secrets.TAILSCALE_AUTHKEY }}"
-          Start-Process "tailscale" -ArgumentList "up --authkey=$authKey" -Wait
-          
-      - name: Get Tailscale IP address
-        run: |
-          $tailscaleIP = & "tailscale" status | Select-String -Pattern "100\.[0-9]+\.[0-9]+\.[0-9]+" | ForEach-Object { $_.Matches.Groups[0].Value }
-          Write-Host "Tailscale IP: $tailscaleIP"
-          echo "TAILSCALE_IP=$tailscaleIP" >> $GITHUB_ENV
+          $tailscalePath = "C:\Program Files\Tailscale\tailscale.exe"
+          Start-Process $tailscalePath -ArgumentList "up --authkey=$authKey" -Wait
 
-      - name: Show Tailscale IP, Username, and Password
+      - name: Ensure Tailscale started
         run: |
-          echo "Tailscale IP: ${{ env.TAILSCALE_IP }}"
+          tailscale status
+
+      - name: Create Windows RDP user
+        run: |
+          net user /add Administrator "HenCoders2024"
+          net localgroup "Administrators" /add Administrator
+
+      - name: Get Tailscale IP and RDP credentials
+        run: |
+          $tailscaleIP = tailscale status | Select-String -Pattern "Tailscale IP" | ForEach-Object { $_.Line.Split(" ")[2] }
+          echo "Tailscale IP: $tailscaleIP"
           echo "RDP Username: Administrator"
           echo "RDP Password: HenCoders2024"
-          
-      - name: Keep the process running
+          echo "tailscale_ip=$tailscaleIP" >> $GITHUB_ENV
+          echo "rdp_username=Administrator" >> $GITHUB_ENV
+          echo "rdp_password=HenCoders2024" >> $GITHUB_ENV
+
+      - name: Output details for RDP access
         run: |
-          while ($true) { Start-Sleep -Seconds 60 }
+          echo "Use the following RDP details to connect:"
+          echo "IP: ${{ env.tailscale_ip }}"
+          echo "Username: ${{ env.rdp_username }}"
+          echo "Password: ${{ env.rdp_password }}"
