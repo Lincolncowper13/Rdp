@@ -21,12 +21,9 @@ jobs:
     - name: Add Tailscale to PATH explicitly
       run: |
         [System.Environment]::SetEnvironmentVariable('PATH', $env:PATH + ";C:\Program Files\Tailscale", [System.EnvironmentVariableTarget]::Machine)
-    - name: Verify Tailscale installation directory
-      run: |
-        dir "C:\Program Files\Tailscale" | findstr "tailscale.exe"
     - name: Authenticate Tailscale with full path
       run: |
-        "C:\Program Files\Tailscale\tailscale.exe" up --authkey $Env:TAILSCALE_AUTHKEY
+        Start-Process -FilePath "C:\Program Files\Tailscale\tailscale.exe" -ArgumentList "up", "--authkey", "$Env:TAILSCALE_AUTHKEY" -Wait
       env:
         TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
     - name: Enabling access to RDP
