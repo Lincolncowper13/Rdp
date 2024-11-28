@@ -1,57 +1,46 @@
-name: Windows RDP with Tailscale
+name: Setup and Connect RDP with Tailscale
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
-  setup:
+  build:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Check out repository
+      uses: actions/checkout@v2
 
-      - name: Install Tailscale
-        run: |
-          Invoke-WebRequest -Uri https://pkgs.tailscale.com/stable/tailscale-setup-latest.exe -OutFile 'tailscale-setup-latest.exe'
-          Start-Process -FilePath 'tailscale-setup-latest.exe' -ArgumentList '/silent' -Wait
-          
-      - name: Verify Tailscale installation
-        run: |
-          where tailscale
-          tailscale version
+    - name: Download and install Tailscale
+      run: |
+        Invoke-WebRequest -Uri "https://pkgs.tailscale.com/stable/tailscale-setup-latest.exe" -OutFile "tailscale-setup-latest.exe"
+        Start-Process -FilePath "tailscale-setup-latest.exe" -ArgumentList "/silent" -Wait
 
-      - name: Start Tailscale service and login using authkey
-        run: |
-          $authKey = "${{ secrets.TAILSCALE_AUTHKEY }}"
-          $tailscalePath = "C:\Program Files\Tailscale\tailscale.exe"
-          Start-Process $tailscalePath -ArgumentList "up --authkey=$authKey" -Wait
+    - name: Verify Tailscale installation
+      run: |
+        "C:\Program Files\Tailscale\tailscale.exe" version
 
-      - name: Ensure Tailscale started
-        run: |
-          tailscale status
+    - name: Add Tailscale AuthKey
+      run: |
+        $authKey = "tskey-auth-kYBBkupZRq11CNTRL-XWEekp4UpBb3n93gfkofCbS1Ea8TqSssH"  # Ganti dengan authkey Tailscale yang valid
+        "C:\Program Files\Tailscale\tailscale.exe" up --authkey=$authKey
+        Start-Sleep -Seconds 5  # Tunggu beberapa detik agar koneksi berhasil
 
-      - name: Create Windows RDP user
-        run: |
-          net user /add Administrator "HenCoders2024"
-          net localgroup "Administrators" /add Administrator
+    - name: Set RDP Username and Password
+      run: |
+        $username = "Administrator"
+        $password = "HenCoders2024"
+        # Proses setting RDP atau pengaturan lainnya jika diperlukan
+        Write-Host "RDP username: $username, Password: $password"
 
-      - name: Get Tailscale IP and RDP credentials
-        run: |
-          $tailscaleIP = tailscale status | Select-String -Pattern "Tailscale IP" | ForEach-Object { $_.Line.Split(" ")[2] }
-          echo "Tailscale IP: $tailscaleIP"
-          echo "RDP Username: Administrator"
-          echo "RDP Password: HenCoders2024"
-          echo "tailscale_ip=$tailscaleIP" >> $GITHUB_ENV
-          echo "rdp_username=Administrator" >> $GITHUB_ENV
-          echo "rdp_password=HenCoders2024" >> $GITHUB_ENV
+    - name: Get Tailscale IP address
+      run: |
+        $tailscaleIP = "C:\Program Files\Tailscale\tailscale.exe" status | Select-String -Pattern "Tailscale IP:" | ForEach-Object { $_.Line.Trim() }
+        Write-Host "Tailscale IP Address: $tailscaleIP"
 
-      - name: Output details for RDP access
-        run: |
-          echo "Use the following RDP details to connect:"
-          echo "IP: ${{ env.tailscale_ip }}"
-          echo "Username: ${{ env.rdp_username }}"
-          echo "Password: ${{ env.rdp_password }}"
+    - name: Start RDP session
+      run: |
+        # Proses untuk mengakses RDP atau menampilkan alamat RDP dengan IP Tailscale
+        Write-Host "Access RDP using the Tailscale IP and login with username '$username' and password '$password'"
