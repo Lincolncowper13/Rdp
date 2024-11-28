@@ -18,15 +18,15 @@ jobs:
       run: |
         Invoke-WebRequest -Uri https://pkgs.tailscale.com/stable/tailscale-setup-latest.exe -OutFile tailscale-setup.exe
         Start-Process tailscale-setup.exe -ArgumentList "/quiet", "/norestart" -Wait
-    - name: Add Tailscale to PATH
+    - name: Add Tailscale to PATH explicitly
       run: |
-        $env:PATH += ";C:\Program Files\Tailscale"
-    - name: Verify Tailscale installation
+        [System.Environment]::SetEnvironmentVariable('PATH', $env:PATH + ";C:\Program Files\Tailscale", [System.EnvironmentVariableTarget]::Machine)
+    - name: Verify Tailscale installation directory
       run: |
-        Get-Command tailscale || echo "Tailscale is not installed"
-    - name: Authenticate Tailscale
+        dir "C:\Program Files\Tailscale" | findstr "tailscale.exe"
+    - name: Authenticate Tailscale with full path
       run: |
-        tailscale up --authkey $Env:TAILSCALE_AUTHKEY
+        "C:\Program Files\Tailscale\tailscale.exe" up --authkey $Env:TAILSCALE_AUTHKEY
       env:
         TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
     - name: Enabling access to RDP
