@@ -1,0 +1,38 @@
+name: Windows RDP
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  setup-tailscale:
+    runs-on: windows-latest
+
+    steps:
+      - name: Download and install Tailscale
+        run: |
+          Invoke-WebRequest -Uri "https://pkgs.tailscale.com/stable/tailscale-setup-latest.exe" -OutFile "$env:TEMP\tailscale-setup-latest.exe"
+          Start-Process -FilePath "$env:TEMP\tailscale-setup-latest.exe" -ArgumentList "/quiet" -Wait
+          
+      - name: Start Tailscale service and login using authkey
+        run: |
+          $authKey = "${{ secrets.TAILSCALE_AUTHKEY }}"
+          Start-Process "tailscale" -ArgumentList "up --authkey=$authKey" -Wait
+          
+      - name: Get Tailscale IP address
+        run: |
+          $tailscaleIP = & "tailscale" status | Select-String -Pattern "100\.[0-9]+\.[0-9]+\.[0-9]+" | ForEach-Object { $_.Matches.Groups[0].Value }
+          Write-Host "Tailscale IP: $tailscaleIP"
+          echo "TAILSCALE_IP=$tailscaleIP" >> $GITHUB_ENV
+
+      - name: Show Tailscale IP, Username, and Password
+        run: |
+          echo "Tailscale IP: ${{ env.TAILSCALE_IP }}"
+          echo "RDP Username: Administrator"
+          echo "RDP Password: HenCoders2024"
+          
+      - name: Keep the process running
+        run: |
+          while ($true) { Start-Sleep -Seconds 60 }
