@@ -26,26 +26,25 @@ jobs:
 
     - name: Add Tailscale AuthKey
       run: |
-        $authKey = "${{ secrets.TAILSCALE_AUTHKEY }}"  # Menggunakan Tailscale AuthKey dari GitHub Secrets
+        $authKey = "${{ secrets.TAILSCALE_AUTHKEY }}"
         Write-Host "Using Tailscale AuthKey: $authKey"
         & "C:\Program Files\Tailscale\tailscale.exe" up --authkey=$authKey
         Write-Host "Tailscale auth key added successfully."
-        Start-Sleep -Seconds 10  # Tunggu beberapa detik agar koneksi berhasil
+        Start-Sleep -Seconds 10
 
-    - name: Set RDP Username and Password
-      run: |
-        $username = "Administrator"
-        $password = "HenCoders2024"
-        Write-Host "RDP username: $username, Password: $password"
-
-    - name: Enable RDP and Open Port 3389
+    - name: Enable Remote Desktop
       run: |
         # Aktifkan Remote Desktop
         $regKey = "HKLM:\System\CurrentControlSet\Control\Terminal Server"
         Set-ItemProperty -Path $regKey -Name "fDenyTSConnections" -Value 0
-        # Membuka port RDP (3389) di Windows Firewall
-        New-NetFirewallRule -Name "Allow RDP" -DisplayName "Allow RDP" -Enabled True -Protocol TCP -Action Allow -LocalPort 3389
-        Write-Host "RDP enabled and port 3389 opened in Windows Firewall."
+
+        # Dapatkan IP Tailscale yang aktif
+        $tailscaleIP = & "C:\Program Files\Tailscale\tailscale.exe" ip -4
+        Write-Host "Active Tailscale IP: $tailscaleIP"
+
+        # Membuka port RDP (3389) di Windows Firewall untuk IP Tailscale aktif
+        New-NetFirewallRule -Name "Allow Tailscale RDP" -DisplayName "Allow RDP for Active Tailscale IP" -Enabled True -Protocol TCP -Action Allow -LocalPort 3389 -RemoteAddress $tailscaleIP
+        Write-Host "RDP enabled and port 3389 opened in Windows Firewall for Tailscale IP: $tailscaleIP."
 
     - name: Get Tailscale IP address
       run: |
@@ -54,13 +53,13 @@ jobs:
 
     - name: Start RDP session
       run: |
-        Write-Host "Access RDP using the Tailscale IP and login with username '$username' and password '$password'"
-        Start-Sleep -Seconds 5  # Menambahkan delay agar sesi RDP dapat berjalan dengan lancar
+        Write-Host "Access RDP using the Tailscale IP and login with username 'Administrator' and password 'HenCoders2024'"
+        Start-Sleep -Seconds 5
 
     - name: Keep printing status for 6 hours
       run: |
         $endTime = (Get-Date).AddHours(6)
         while ((Get-Date) -lt $endTime) {
           Write-Host "HenRdp Aktif setiap menit"
-          Start-Sleep -Seconds 60  # Menunggu 1 menit sebelum menampilkan pesan lagi
+          Start-Sleep -Seconds 60
         }
