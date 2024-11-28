@@ -34,7 +34,7 @@ jobs:
 
     - name: Enable Remote Desktop
       run: |
-        # Aktifkan Remote Desktop
+        # Mengaktifkan Remote Desktop
         $regKey = "HKLM:\System\CurrentControlSet\Control\Terminal Server"
         Set-ItemProperty -Path $regKey -Name "fDenyTSConnections" -Value 0
 
