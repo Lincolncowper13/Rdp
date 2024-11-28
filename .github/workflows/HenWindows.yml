@@ -24,18 +24,22 @@ jobs:
     - name: Verify Tailscale installation with full path
       run: |
         & "C:\Program Files\Tailscale\tailscale.exe" version || echo "Tailscale is not installed"
-    - name: Authenticate Tailscale with full path
+    - name: Authenticate Tailscale with full path and TCP
       run: |
-        & "C:\Program Files\Tailscale\tailscale.exe" up --authkey $Env:TAILSCALE_AUTHKEY
+        & "C:\Program Files\Tailscale\tailscale.exe" up --authkey $Env:TAILSCALE_AUTHKEY --use-tcp
       env:
         TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
-    - name: Enabling access to RDP
+    - name: Enable access to RDP
       run: | 
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
         copy wallpaper.png C:\Users\Public\Desktop\wallpaper.png
         copy wallpaper.bat C:\Users\Public\Desktop\wallpaper.bat
+    - name: Get Tailscale IP and RDP Access
+      run: |
+        $tailscale_ip = & "C:\Program Files\Tailscale\tailscale.exe" ip -4
+        echo "Tailscale IP: $tailscale_ip"
     - name: Start RDP session
       run: cmd /c start.bat
     - name: Successfully made! You can close the tab now.
