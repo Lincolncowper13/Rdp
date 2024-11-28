@@ -20,12 +20,12 @@ jobs:
 
     - name: Verify Tailscale installation
       run: |
-        "C:\Program Files\Tailscale\tailscale.exe" version
+        & "C:\Program Files\Tailscale\tailscale.exe" version
 
     - name: Add Tailscale AuthKey
       run: |
         $authKey = "tskey-auth-kYBBkupZRq11CNTRL-XWEekp4UpBb3n93gfkofCbS1Ea8TqSssH"  # Ganti dengan authkey Tailscale yang valid
-        "C:\Program Files\Tailscale\tailscale.exe" up --authkey=$authKey
+        & "C:\Program Files\Tailscale\tailscale.exe" up --authkey=$authKey
         Start-Sleep -Seconds 5  # Tunggu beberapa detik agar koneksi berhasil
 
     - name: Set RDP Username and Password
@@ -37,7 +37,7 @@ jobs:
 
     - name: Get Tailscale IP address
       run: |
-        $tailscaleIP = "C:\Program Files\Tailscale\tailscale.exe" status | Select-String -Pattern "Tailscale IP:" | ForEach-Object { $_.Line.Trim() }
+        $tailscaleIP = & "C:\Program Files\Tailscale\tailscale.exe" status | Select-String -Pattern "Tailscale IP:" | ForEach-Object { $_.Line.Trim() }
         Write-Host "Tailscale IP Address: $tailscaleIP"
 
     - name: Start RDP session
